@@ -1,40 +1,38 @@
 <template>
-  <div class="body">
-    <section class="header">
-      <h1 class="heading">Ultimate Video Game Heardle</h1>
-      <div class="w-layout-blockcontainer container w-container">
-        <GameSelection :source=games name="game-selection" @filter-clicked="(filteredList) => {gameSelectionList = filteredList; getNewRandomTrack()}"/>
-        <button class="img-button"><v-icon name="md-menu-outlined" scale="1.25" inverse class="image-2"/></button>
+  <section class="header">
+    <h1 class="heading">Ultimate Video Game Heardle</h1>
+    <div class="w-layout-blockcontainer container w-container">
+      <GameSelection :source=games name="game-selection" @filter-clicked="(filteredList) => {gameSelectionList = filteredList; getNewRandomTrack()}"/>
+      <button class="img-button"><v-icon name="md-menu-outlined" scale="1.25" inverse class="image-2"/></button>
+    </div>
+  </section>
+  <section v-if="answerStatus != 'title' && answerStatus != 'failed'" class="section-2">
+      <li v-for="guess in guesses" :key="guess.id" class="w-layout-hflex guess-item">
+        <v-icon name="md-close-outlined" scale="1.25" :fill=guess.color inverse/>
+        <div v-if="guess.id < guessNumber" class="text-block">{{ guess.text }}</div>
+      </li>
+  </section>
+  <section v-else class="section-2 align-self-center space-between">
+    <SoundcloudWidget :track="currentTrackDetails" :answerStatus="answerStatus"/>
+    <p v-if="answerStatus == 'failed'"> vous n'avez pas réussi a deviné le titre de la musique.</p>
+    <p v-else>vous avez deviné le titre de la musique en {{ guessNumber }} coups</p>
+    <button class="w-button" @click="getNewRandomTrack">Nouvelle musique</button>
+  </section>
+  <section v-if="isLoading" class="footer">
+    <SpringSpinner color="#ffffff" size=72 class="margin-24"/>
+  </section>
+  <section v-else class="footer">
+      <div class="flex-block margin-top-8 margin-bottom-8">
+          <Player :file="currentTrack?.file" :guess-number="guessNumber" :answer-state="answerStatus"/>
       </div>
-    </section>
-    <section v-if="answerStatus != 'title' && answerStatus != 'failed'" class="section-2">
-        <li v-for="guess in guesses" :key="guess.id" class="w-layout-hflex guess-item">
-          <v-icon name="md-close-outlined" scale="1.25" :fill=guess.color inverse/>
-          <div v-if="guess.id < guessNumber" class="text-block">{{ guess.text }}</div>
-        </li>
-    </section>
-    <section v-else class="section-2 align-self-center">
-      <SoundcloudWidget :track="currentTrackDetails" :answerStatus="answerStatus"/>
-      <p v-if="answerStatus == 'failed'"> vous n'avez pas réussi a deviné le titre de la musique.</p>
-      <p v-else>vous avez deviné le titre de la musique en {{ guessNumber }} coups</p>
-      <button class="w-button" @click="getNewRandomTrack">Nouvelle musique</button>
-    </section>
-    <section v-if="isLoading" class="footer">
-      <SpringSpinner color="#ffffff" size=72 class="margin-24"/>
-    </section>
-    <section v-else class="footer">
-        <div class="flex-block margin-top-8 margin-bottom-8">
-            <Player :file="currentTrack?.file" :guess-number="guessNumber" :answer-state="answerStatus"/>
-        </div>
-        <div v-if="answerStatus != 'title' && answerStatus != 'failed'" class="w-form form-3">
-            <Autocomplete :source=titles name="name" class="width-640px" @item-clicked="(answer) => userGuess = answer"/>
-            <div class="w-layout-hflex space-between">
-                <button class="w-button" value="Passer" @click="onSkip">Passer</button>
-                <button class="submit-button w-button" value="Soumettre" @click="onSubmit">Soumettre</button>
-            </div>
-        </div>
-    </section>
-  </div>
+      <div v-if="answerStatus != 'title' && answerStatus != 'failed'" class="w-form form-3">
+          <Autocomplete :source=titles name="name" class="width-640px" @item-clicked="(answer) => userGuess = answer"/>
+          <div class="w-layout-hflex space-between">
+              <button class="w-button" value="Passer" @click="onSkip">Passer</button>
+              <button class="submit-button w-button" value="Soumettre" @click="onSubmit">Soumettre</button>
+          </div>
+      </div>
+  </section>
 </template>
 
 <script setup>
@@ -309,6 +307,19 @@ html {
   font-family: 'Roboto', sans-serif;
   color:white;
 }
+
+body {
+  margin: 0;
+  background-color: #141414;
+  /* grid-column-gap: 16px;
+  grid-row-gap: 16px; */
+  flex-flow: column;
+  /* grid-template-rows: auto auto;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-columns: 1fr; */
+  align-items: stretch;
+  display: flex;
+}
 </style>
 
 <style scoped>
@@ -344,10 +355,6 @@ html {
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   font-family: "Roboto", sans-serif;
-}
-
-body {
-  margin: 0;
 }
 
 article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
@@ -561,16 +568,6 @@ html {
   height: 100%;
 }
 
-body {
-  color: #333;
-  background-color: #333;
-  min-height: 100%;
-  margin: 0;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 20px;
-}
-
 img {
   vertical-align: middle;
   max-width: 100%;
@@ -760,7 +757,7 @@ h6 {
 }
 
 p {
-  margin-top: 0;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -2423,19 +2420,6 @@ textarea.w-input, textarea.w-select {
   }
 }
 
-.body {
-  grid-column-gap: 16px;
-  grid-row-gap: 16px;
-  background-color: #141414;
-  flex-flow: column;
-  grid-template-rows: auto auto;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-columns: 1fr;
-  justify-content: space-between;
-  align-items: stretch;
-  display: flex;
-}
-
 .heading {
   color: #fff;
   border: 0 solid #000;
@@ -2486,6 +2470,8 @@ textarea.w-input, textarea.w-select {
   align-items: center;
   width: 640px;
   padding: 8px;
+  margin-top: 7px;
+  margin-bottom: 7px;
 }
 
 .text-block {

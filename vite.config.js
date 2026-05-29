@@ -17,6 +17,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ["oh-vue-icons/icons","vue-simple-search-dropdown"]
+    exclude: ["oh-vue-icons/icons"]
   }
 })
