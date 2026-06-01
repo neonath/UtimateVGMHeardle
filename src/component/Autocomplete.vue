@@ -63,6 +63,8 @@ function arrayLikeSearch(items){
 .autocomplete-dropdown {
   width: 640px;
   background-color: #141414;
+  height: 360px;
+  overflow-y: auto;
 }
 
 .autocomplete-suggestion-list {

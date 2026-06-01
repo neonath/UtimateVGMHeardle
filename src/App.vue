@@ -319,6 +319,7 @@ body {
   grid-auto-columns: 1fr; */
   align-items: stretch;
   display: flex;
+  min-height: 100vh;
 }
 </style>
 

@@ -3,6 +3,7 @@
         <template #trigger>
             <button class="img-button"><v-icon name="md-filteralt-outlined" scale="1.25" inverse class="image"/></button>
         </template>
+        <template #default="{ close }">
         <SelectMenuBody>
           <SelectMenuInput placeholder="Chercher un jeu" @search="arrayLikeSearch"/>
           <SelectMenuCheckboxGroup v-model="selectedGame">
@@ -15,22 +16,21 @@
               </SelectMenuCheckboxItem>
             </div>
           </SelectMenuCheckboxGroup>
-          <SelectMenuButton @click="onClick">
+          <SelectMenuButton @click="onClick(close)">
             Valider
           </SelectMenuButton>
         </SelectMenuBody>
+        </template>
     </SelectMenuDropdown>
 </template>
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
-import { useDropdown } from 'v-selectmenu';
 import { SelectMenuBody, SelectMenuCheckboxGroup, SelectMenuDropdown, SelectMenuInput, SelectMenuCheckboxItem, SelectMenuRow, SelectMenuSubHeader, SelectMenuSection, SelectMenuChildLevel, SelectMenuButton } from 'v-selectmenu';
 const props = defineProps(['name','source']);
 const emit = defineEmits(['filterClicked']);
 const dropdownSelection = ref(null);
 const selectedGame = ref([]);
-const {close} = useDropdown();
 let data = reactive({
     search: '',
     isOpen: false,
@@ -52,7 +52,7 @@ function onInputChange(event) {
     arrayLikeSearch(props.source);
 }
 
-function onClick(event) {
+function onClick(close) {
   emit('filterClicked', selectedGame.value);
   let saveSelectedGame = window.localStorage.getItem("selected_game");
   if(!saveSelectedGame){
@@ -66,6 +66,7 @@ function onClick(event) {
       window.localStorage.removeItem("selected_game");
     }
   }
+  close();
 }
 
 function arrayLikeSearch(value){
