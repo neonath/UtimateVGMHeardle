@@ -3,7 +3,7 @@
     <h1 class="heading">Ultimate Video Game Heardle</h1>
     <div class="w-layout-blockcontainer container w-container">
       <GameSelection :source=games name="game-selection" @filter-clicked="(filteredList) => {gameSelectionList = filteredList; getNewRandomTrack()}"/>
-      <button class="img-button"><v-icon name="md-menu-outlined" scale="1.25" inverse class="image-2"/></button>
+      <GameList :source=titles />
     </div>
   </section>
   <section v-if="answerStatus != 'title' && answerStatus != 'failed'" class="section-2">
@@ -44,6 +44,7 @@ import Player from './component/Player.vue';
 import Autocomplete from './component/Autocomplete.vue';
 import SoundcloudWidget from './component/SoundcloudWidget.vue';
 import GameSelection from './component/GameSelection.vue';
+import GameList from './component/GameList.vue';
 
 let id = 0;
 const guesses = ref([
@@ -71,7 +72,7 @@ onMounted(async () => {
     await soundcloudClient.authenticate(); // Authentification au chargement de l'application
     // currentTrack.value = await soundcloudClient.getTrack(442863180); // Récupérer une piste spécifique pour le test
     userPlaylists.value = await soundcloudClient.getUserPlaylists(1595219529); // Récupérer les playlists d'un utilisateur
-    games.value = await filterGameList(); 
+    games.value = await makeFilterGameList(); 
     if(!window.localStorage.getItem("selected_game")){
       initGameSelectionList();
     }else{
@@ -143,7 +144,7 @@ async function getRandomTrack(){
   return randomTrack;
 }
 
-async function filterGameList() {
+async function makeFilterGameList() {
   var result = [];
 
   userPlaylists.value.forEach(playlist => {
@@ -304,8 +305,8 @@ function formatTrack(track){
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
 html {
-  font-family: 'Roboto', sans-serif;
-  color:white;
+  font-family: 'Roboto', sans-serif !important;
+  color:white !important;
 }
 
 body {
@@ -321,9 +322,18 @@ body {
   display: flex;
   min-height: 100vh;
 }
+
+.game-list {
+  background-color: #141414 !important;
+  color: white !important;
+}
 </style>
 
 <style scoped>
+
+.background-black{
+  background-color: #141414 !important;
+}
 
 .game-filter-dropdown {
   width: 640px;

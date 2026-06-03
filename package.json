@@ -13,6 +13,7 @@
   "dependencies": {
     "epic-spinners": "^2.0.0",
     "oh-vue-icons": "^1.0.0-rc3",
+    "v-dialogs": "^3.1.1",
     "v-dropdown": "^3.5.1",
     "v-selectmenu": "^3.1.2",
     "v-selectpage": "^3.0.1",
