@@ -17,7 +17,8 @@
     "v-dropdown": "^3.5.1",
     "v-selectmenu": "^3.1.2",
     "v-selectpage": "^3.0.1",
-    "vue": "^3.5.26"
+    "vue": "^3.5.26",
+    "vue-final-modal": "^4.5.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.3",

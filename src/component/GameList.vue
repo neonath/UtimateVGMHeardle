@@ -1,21 +1,15 @@
 <template>
-    <button class="img-button" @click="visible = true"><v-icon name="md-menu-outlined" scale="1.25" inverse class="image-2"/></button>
-    <DialogModalBox 
-        v-model:visible="visible" 
-        :maxButton="false"
-        :title="'Liste des musiques'"
-        :customClass="'game-list'">
-
-        <ul>
-            <li v-for="music in props.source" :key="music.id">
-                {{ music.title }} - {{ music.game }}
-            </li>
-        </ul>
-    </DialogModalBox>
+  <VueFinalModal class="modal" content-class="modal-content">
+    <ul>
+      <li v-for="music in props.source" :key="music.id">
+          {{ music.title }} - {{ music.game || music.franchise }}
+      </li>
+    </ul>
+  </VueFinalModal>
 </template>
 
 <script setup>
-import { DialogModalBox } from 'v-dialogs';
+import { VueFinalModal } from 'vue-final-modal';
 import { ref } from 'vue';
 
 const props = defineProps(['source']);

@@ -12,7 +12,7 @@
                 {{ franchise.name }}
               </SelectMenuSubHeader>
               <SelectMenuCheckboxItem v-for="game in franchise.games" :key="game.id" :value="game.id">
-                {{ game.game }}
+                {{ game.name }}
               </SelectMenuCheckboxItem>
             </div>
           </SelectMenuCheckboxGroup>

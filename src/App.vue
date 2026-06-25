@@ -1,9 +1,12 @@
 <template>
+  <ModalsContainer/>
   <section class="header">
     <h1 class="heading">Ultimate Video Game Heardle</h1>
     <div class="w-layout-blockcontainer container w-container">
-      <GameSelection :source=games name="game-selection" @filter-clicked="(filteredList) => {gameSelectionList = filteredList; getNewRandomTrack()}"/>
-      <GameList :source=titles />
+      <button class="img-button" @click="showFilterList = true"><v-icon name="md-filteralt-outlined" scale="1.25" inverse class="image"/></button>
+      <GameSelectionModal v-model="showFilterList" title="Filtrer des jeux" :source="games" @confirm="(filteredList) => confirmFilterList(filteredList)"/>
+      <button class="img-button" @click="showMusicList = true"><v-icon name="md-menu-outlined" scale="1.25" inverse class="image-2"/></button>
+      <GameList v-model="showMusicList" title="Liste des musiques" :source="titles" @confirm="confirmMusicList"/>
     </div>
   </section>
   <section v-if="answerStatus != 'title' && answerStatus != 'failed'" class="section-2">
@@ -45,6 +48,8 @@ import Autocomplete from './component/Autocomplete.vue';
 import SoundcloudWidget from './component/SoundcloudWidget.vue';
 import GameSelection from './component/GameSelection.vue';
 import GameList from './component/GameList.vue';
+import GameSelectionModal from './component/GameSelectionModal.vue';
+import { ModalsContainer,useModal } from 'vue-final-modal';
 
 let id = 0;
 const guesses = ref([
@@ -65,6 +70,18 @@ const answerStatus = ref('');
 const currentTrackDetails = ref(null);
 const gameSelectionList = ref([]);
 const userPlaylists = ref([]);
+const showFilterList = ref(false);
+const showMusicList = ref(false);
+
+function confirmFilterList(filteredList) {
+  showFilterList.value = false;
+  gameSelectionList.value = filteredList;
+  getNewRandomTrack();
+}
+
+function confirmMusicList() {
+  showMusicList.value = false;
+}
 
 onMounted(async () => {
   try {
@@ -80,7 +97,7 @@ onMounted(async () => {
     }
     console.log('in app - gameSelectionList:', gameSelectionList.value);
     titles.value = await getUserTracksTitles(1595219529);
-    console.log('in app - Titres des pistes de la playlist:', titles.value);
+    console.log('in app - Titres des pistes:', titles.value);
     currentTrack.value = await getRandomTrack(); // Récupérer une piste aléatoire d'un utilisateur
     console.log('in app - Track à deviner:', currentTrack.value);
     currentTrackDetails.value = await soundcloudClient.getTrackDetails(currentTrack.value.id);
@@ -151,7 +168,7 @@ async function makeFilterGameList() {
     let franchisePlaylist = playlist.tags.split('\"')[1];
     let game = {
         franchise: playlist.tags.split('\"')[1],
-        game: playlist.tags.split('\"')[3],
+        name: playlist.tags.split('\"')[3] || playlist.tags.split('\"')[1],
         id: playlist.id
       };
     let findFranchise = result.find(franchise => franchise.name === franchisePlaylist);
@@ -303,6 +320,7 @@ function formatTrack(track){
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'vue-final-modal/style.css';
 
 html {
   font-family: 'Roboto', sans-serif !important;
