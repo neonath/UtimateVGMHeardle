@@ -6,7 +6,7 @@
       <button class="img-button" @click="showFilterList = true"><v-icon name="md-filteralt-outlined" scale="1.25" inverse class="image"/></button>
       <GameSelectionModal v-model="showFilterList" title="Filtrer des jeux" :source="games" @confirm="(filteredList) => confirmFilterList(filteredList)"/>
       <button class="img-button" @click="showMusicList = true"><v-icon name="md-menu-outlined" scale="1.25" inverse class="image-2"/></button>
-      <GameList v-model="showMusicList" title="Liste des musiques" :source="titles" @confirm="confirmMusicList"/>
+      <GameList v-model="showMusicList" title="Liste des musiques" :source="games" :count="{franchise: games.length, game: userPlaylists.length, music: titles.length}" @confirm="confirmMusicList"/>
     </div>
   </section>
   <section v-if="answerStatus != 'title' && answerStatus != 'failed'" class="section-2">
@@ -169,7 +169,14 @@ async function makeFilterGameList() {
     let game = {
         franchise: playlist.tags.split('\"')[1],
         name: playlist.tags.split('\"')[3] || playlist.tags.split('\"')[1],
-        id: playlist.id
+        id: playlist.id,
+        musics: playlist.tracks.map(track => {
+          var normalizedTitle = cleanTitle(track.title, playlist.tags.split('\"')[3]);
+          return {
+            title: normalizedTitle,
+            id: track.id
+          };
+        })
       };
     let findFranchise = result.find(franchise => franchise.name === franchisePlaylist);
     if (findFranchise) {
@@ -278,7 +285,7 @@ function checkAnswer(userGuess, correctTitle) {
 }
 
 function cleanTitle(title, playlistTag) {
-    return title.replace(RegExp(playlistTag, 'i'), '').replace(/soundtrack|ost/i, '').replace(" - ", "").trim();
+    return title.replace(RegExp(playlistTag, 'i'), '').replace(/soundtrack|ost|music/i, '').replace(" - ", "").trim();
 }
 
 function normalize(item) {

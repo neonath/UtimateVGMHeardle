@@ -5,7 +5,8 @@
         </template>
         <DropdownContent class="autocomplete-dropdown">
             <ul class="autocomplete-suggestion-list">
-                <li class="autocomplete-suggestion-list-item" v-for="result in data.results" :key="result" @click="onItemClick(result,$event)">{{ result.title}} - {{ result.game }}</li>
+                <li class="autocomplete-suggestion-list-item" v-if="data.results.length <= 0">Aucune musique correspondante trouvée</li>
+                <li class="autocomplete-suggestion-list-item" v-else v-for="result in data.results" :key="result" @click="onItemClick(result,$event)">{{ result.title}} - {{ result.game }}</li>                
             </ul>
         </DropdownContent>
     </Dropdown>
@@ -31,6 +32,7 @@ function onInputChange(event) {
         arrayLikeSearch(props.source);
         dropdown.value.open();
     }else{
+        data.results = [];
         dropdown.value.close();
     } 
 }
@@ -43,11 +45,11 @@ function onItemClick(item,event) {
 }
 
 function arrayLikeSearch(items){
-    data.results = items.filter((item) => {
-        var filter = item.title.toLowerCase().indexOf(data.search.toLowerCase()) > -1 ||
-                     item.game.toLowerCase().indexOf(data.search.toLowerCase()) > -1 ;
-        return filter;
-    });
+  data.results = items.filter((item) => {
+    var filter = item.title.toLowerCase().indexOf(data.search.toLowerCase()) > -1 ||
+                  item.game.toLowerCase().indexOf(data.search.toLowerCase()) > -1 ;
+    return filter;
+  });
 }
 </script>
 
@@ -63,7 +65,7 @@ function arrayLikeSearch(items){
 .autocomplete-dropdown {
   width: 640px;
   background-color: #141414;
-  height: 360px;
+  max-height: 360px;
   overflow-y: auto;
 }
 

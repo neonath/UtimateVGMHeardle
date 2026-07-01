@@ -224,7 +224,7 @@ class SoundCloudAPI {
 
   async getUserPlaylists(userId) {
     try {
-      const data = await this.request(`/users/soundcloud:users:${userId}/playlists`);
+      const data = await this.request(`/users/soundcloud:users:${userId}/playlists`, { limit: 200 });
       console.log('in SoundCloudApi - User playlists:', data);
       return data || [];
     } catch (error) {
