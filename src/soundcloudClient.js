@@ -40,6 +40,10 @@ class SoundCloudClient {
     return soundCloudAPI.getTrackDetails(trackId);
   }
 
+  async getWidgetPlayer(trackPermalink) {
+    return soundCloudAPI.getWidgetPlayer(trackPermalink);
+  }
+
   async getPlaylist(playlistId) {
     return soundCloudAPI.getPlaylist(playlistId);
   }

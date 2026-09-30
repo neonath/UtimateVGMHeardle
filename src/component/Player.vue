@@ -18,56 +18,79 @@
             <div class="text-block">{{ currentTime }}</div>
             <div class="text-block">{{ endTime }}</div>
         </div>
-        <audio :src="file" ref="audioTag" @loadedmetadata="initPlayer" @timeupdate="onTimeupdate"/>
+        <!-- <audio ref="audioTag" @loadedmetadata="initPlayer" @timeupdate="onTimeupdate"></audio> -->
+        <iframe id="iframeTag" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay;encrypted-media;unload" :src="soundUrl" @load="initPlayer" class="display-none">
+        </iframe>
     </div>
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { ref } from 'vue';
 
 const props = defineProps({
-    file : String,
+    soundUrl : String,
     guessNumber : Number,
     answerState : String
 })
-const audioTag = ref(null);
+const emit = defineEmits(['PlayerSCReady']);
 const currentTime = ref("00:00");
 const endTime = ref("00:00");
 const progressMaxValue = ref(100);
 const progressValue = ref(0);
 const state = ref('play');
 const muteState = ref('unmute');
+let PlayerSC = null;
+
+// onMounted(async () => {
+    
+// });
 
 function play(){
     if(state.value === 'play'){
-        audioTag.value.play();
+        PlayerSC.play();
         state.value = 'pause';
     } else {
-        audioTag.value.pause();
+        PlayerSC.pause();
         state.value = 'play';
     }
 }
 
 function mute(){
     if(muteState.value === 'unmute'){
-        audioTag.value.muted = true;
+        PlayerSC.setVolume(0);
         muteState.value = 'mute';
     } else {
-        audioTag.value.muted = false;
+        PlayerSC.setVolume(100);
         muteState.value = 'unmute';
     }
 }
 
 function initPlayer(){
+    console.log("in Player - SoundUrl:", props.soundUrl);
     var duration = 0;
+    const iframeTag = document.getElementById('iframeTag');
+
+    PlayerSC = window.SC.Widget(iframeTag);
+    PlayerSC.bind(SC.Widget.Events.READY, function() {
+        console.log("in Player - PlayerSC ready");
+        emit('PlayerSCReady');
+        PlayerSC.bind(SC.Widget.Events.PLAY_PROGRESS, onTimeupdate);
+    });
+
     if(props.answerState != "title"){
         duration = 16;
+        displayAudioDuration(duration);
+        setSliderMax(Math.floor(duration));
     }
     else{
-        duration = audioTag.value.duration;
+        PlayerSC.getDuration(function(value) {
+            duration = value / 1000;
+            displayAudioDuration(duration);
+            setSliderMax(Math.floor(duration));
+        });
     }
-    displayAudioDuration(duration);
-    setSliderMax(Math.floor(duration));
+    
 }
 
 function displayAudioDuration(duration){
@@ -78,43 +101,47 @@ function setSliderMax(duration){
     progressMaxValue.value = duration;
 }
 
-function onTimeupdate(){
-    const audio = audioTag.value;
-    progressValue.value = audio.currentTime;
-    currentTime.value = calculateTime(audio.currentTime);
+function onTimeupdate(soundData){
+    console.log("in Player - onTimeupdate - soundData:", soundData);
+    let currentPosition = soundData.currentPosition / 1000;
+    progressValue.value = currentPosition;
+    currentTime.value = calculateTime(currentPosition);
 
     if (props.answerState == "title" || props.answerState == "failed"){
-        displayAudioDuration(audio.duration);
-        setSliderMax(Math.floor(audio.duration));
+        PlayerSC.getDuration(function(value) {
+            let duration = value / 1000;
+            displayAudioDuration(duration);
+            setSliderMax(Math.floor(duration));
+        });
     }else{
         switch(props.guessNumber){
             case 0:
-                if(audio.currentTime >= 1){
+                if(currentPosition >= 1){
                     stop();
                 }
                 break;
             case 1:
-                if(audio.currentTime >= 2){
+                if(currentPosition >= 2){
                     stop();
                 }
                 break;
             case 2:
-                if(audio.currentTime >= 4){
+                if(currentPosition  >= 4){
                     stop();
                 }
                 break;
             case 3:
-                if(audio.currentTime >= 7){
+                if(currentPosition >= 7){
                     stop();
                 }
                 break;
             case 4:
-                if(audio.currentTime >= 11){
+                if(currentPosition >= 11){
                     stop();
                 }
                 break;
             case 5:
-                if(audio.currentTime >= 16){
+                if(currentPosition >= 16){
                     stop();
                 }
                 break;
@@ -123,14 +150,13 @@ function onTimeupdate(){
 }
 
 function stop(){
-    audioTag.value.pause();
-    audioTag.value.currentTime = 0;
+    PlayerSC.pause();
+    PlayerSC.seekTo(0);
     state.value = 'play';
 }
 
 function onInput(event){
-    const audio = audioTag.value;
-    audio.volume = event.target.value / 100;
+    PlayerSC.setVolume(event.target.value);
 }
 
 function calculateTime(seconds){
@@ -197,6 +223,10 @@ function calculateTime(seconds){
 
 .text-block {
   color: #fff;
+}
+
+.display-none {
+  display: none;
 }
 
 </style>

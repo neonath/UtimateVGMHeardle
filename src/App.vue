@@ -21,12 +21,12 @@
     <p v-else>vous avez deviné le titre de la musique en {{ guessNumber }} coups</p>
     <button class="w-button" @click="getNewRandomTrack">Nouvelle musique</button>
   </section>
-  <section v-if="isLoading" class="footer">
+  <section v-show="isLoading" class="footer">
     <SpringSpinner color="#ffffff" size=72 class="margin-24"/>
   </section>
-  <section v-else class="footer">
+  <section v-show="!isLoading" class="footer">
       <div class="flex-block margin-top-8 margin-bottom-8">
-          <Player :file="currentTrack?.file" :guess-number="guessNumber" :answer-state="answerStatus"/>
+          <Player :sound-url="WidgetUrl" :guess-number="guessNumber" :answer-state="answerStatus" @player-s-c-ready="isLoading = false"/>
       </div>
       <div v-if="answerStatus != 'title' && answerStatus != 'failed'" class="w-form form-3">
           <Autocomplete :source=titles name="name" class="width-640px" @item-clicked="(answer) => userGuess = answer"/>
@@ -41,12 +41,10 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import { SpringSpinner } from 'epic-spinners';
-import { Dropdown,DropdownContent } from 'v-dropdown';
 import soundcloudClient from './soundcloudClient';
 import Player from './component/Player.vue';
 import Autocomplete from './component/Autocomplete.vue';
 import SoundcloudWidget from './component/SoundcloudWidget.vue';
-import GameSelection from './component/GameSelection.vue';
 import GameList from './component/GameList.vue';
 import GameSelectionModal from './component/GameSelectionModal.vue';
 import { ModalsContainer,useModal } from 'vue-final-modal';
@@ -72,6 +70,7 @@ const gameSelectionList = ref([]);
 const userPlaylists = ref([]);
 const showFilterList = ref(false);
 const showMusicList = ref(false);
+const WidgetUrl = ref(null);
 
 function confirmFilterList(filteredList) {
   showFilterList.value = false;
@@ -102,11 +101,23 @@ onMounted(async () => {
     console.log('in app - Track à deviner:', currentTrack.value);
     currentTrackDetails.value = await soundcloudClient.getTrackDetails(currentTrack.value.id);
     console.log('in app - Current track details:', currentTrackDetails.value);
+    //WidgetPlayer.value = await soundcloudClient.getWidgetPlayer(currentTrackDetails.value.permalink_url);
+    WidgetUrl.value = "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/" + currentTrackDetails.value.id
+    +"&auto_play=false"
+    +"&color=%23ff5500"
+    +"&buying=false"
+    +"&sharing=false"
+    +"&download=false"
+    +"&show_artwork=false"
+    +"&show_playcount=false"
+    +"&show_user=false"
+    +"&hide_related=true"
+    +"&show_comments=false"
+    +"&show_reposts=false"
+    +"&show_teaser=false";
     formatTrack(currentTrackDetails.value);
   } catch (error) {
     console.error('❌ Erreur: '+error.stack);
-  } finally {
-    isLoading.value = false;
   }
 });
 
@@ -149,13 +160,13 @@ async function getRandomTrack(){
   console.log('in app - Tags de la playlist:', playlistTags);
   const randomTrackIndex = Math.floor(Math.random() * randomPlaylist.tracks.length);
   console.log('in app - randomTrackIndex:', randomTrackIndex);
-  var randomTrackFile = await soundcloudClient.getTrack(randomPlaylist.tracks[randomTrackIndex].id);
-  var normalizedTitle = cleanTitle(randomPlaylist.tracks[randomTrackIndex].title, playlistTags[3]);
+  //var randomTrackFile = await soundcloudClient.getTrack(randomPlaylist.tracks[randomTrackIndex].id);
+  var normalizedTitle = cleanTitle(randomPlaylist.tracks[randomTrackIndex].title, playlistTags[3]? playlistTags[3] : playlistTags[1]);
   var randomTrack = {
     franchise: playlistTags[1] || '',
     game : playlistTags[3] || '',
     title: normalizedTitle,
-    file: randomTrackFile,
+    //file: randomTrackFile,
     id: randomPlaylist.tracks[randomTrackIndex].id
   };
   return randomTrack;
@@ -171,10 +182,10 @@ async function makeFilterGameList() {
         name: playlist.tags.split('\"')[3] || playlist.tags.split('\"')[1],
         id: playlist.id,
         musics: playlist.tracks.map(track => {
-          var normalizedTitle = cleanTitle(track.title, playlist.tags.split('\"')[3]);
+          var normalizedTitle = cleanTitle(track.title, playlist.tags.split('\"')[3]? playlist.tags.split('\"')[3] : playlist.tags.split('\"')[1]);
           return {
-            title: normalizedTitle,
-            id: track.id
+            title: normalizedTitle //+ " ---------------------// " + track.title,
+            ,id: track.id
           };
         })
       };
@@ -234,27 +245,40 @@ function onSkip() {
 }
 
 async function getNewRandomTrack() {
-  userGuess.value = '';
-  guessNumber.value = 0;
-  answerStatus.value = '';
-  guesses.value.forEach(guess => {
-    guess.text = '';
-    guess.color = '#141414';
-  });
+  location.reload();
+//   userGuess.value = '';
+//   guessNumber.value = 0;
+//   answerStatus.value = '';
+//   guesses.value.forEach(guess => {
+//     guess.text = '';
+//     guess.color = '#141414';
+//   });
 
-  try{
-    isLoading.value = true;
-    console.log('in app - gameSelectionList:', gameSelectionList.value);
-    if(gameSelectionList.value.length == 0){
-      initGameSelectionList();
-    }
-    currentTrack.value = await getRandomTrack();
-    currentTrackDetails.value = await soundcloudClient.getTrackDetails(currentTrack.value.id);
-    formatTrack(currentTrackDetails.value);
-  }
-  finally {
-    isLoading.value = false;
-  }
+//   try{
+//     isLoading.value = true;
+//     console.log('in app - gameSelectionList:', gameSelectionList.value);
+//     if(gameSelectionList.value.length == 0){
+//       initGameSelectionList();
+//     }
+//     currentTrack.value = await getRandomTrack();
+//     currentTrackDetails.value = await soundcloudClient.getTrackDetails(currentTrack.value.id);
+//     WidgetUrl.value = "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/" + currentTrackDetails.value.id
+//     +"&auto_play=false"
+//     +"&color=%23ff5500"
+//     +"&buying=false"
+//     +"&sharing=false"
+//     +"&download=false"
+//     +"&show_artwork=false"
+//     +"&show_playcount=false"
+//     +"&show_user=false"
+//     +"&hide_related=true"
+//     +"&show_comments=false"
+//     +"&show_reposts=false"
+//     +"&show_teaser=false";
+//     formatTrack(currentTrackDetails.value);
+//   } catch (error) {
+//     console.error('❌ Erreur: '+error.stack);
+//   }
 }
 
 /**
@@ -285,7 +309,38 @@ function checkAnswer(userGuess, correctTitle) {
 }
 
 function cleanTitle(title, playlistTag) {
-    return title.replace(RegExp(playlistTag, 'i'), '').replace(/soundtrack|ost|music/i, '').replace(" - ", "").trim();
+  //console.log('in app - cleaning title:', title);
+  //console.log('in app - cleaning regex:', RegExp("(\s?:?\s?|\s?-?\s?)"+playlistTag+"(\s?:?\s?|\s?-?\s?)", 'gi').toString());
+  title = title.replace(/soundtrack|ost|music|\(?\s*complete (collection|edition)\s*\)?|\.mp3|CD\d+/gi, '').trim();
+  let regexFormat = [RegExp("^\\d+\.\\s?.+-\\s?"+playlistTag+"$", 'gi'),// Numero de piste. titre - nom du jeu
+                     RegExp("^"+playlistTag+"(\\s+-)",'gi'),// nom du jeu - titre
+                     RegExp("^"+playlistTag+"(\\s+:)",'gi'),// nom du jeu: titre
+                     RegExp("^"+playlistTag+"(\\s+-\\s+\\d+\\s+-)",'gi'),// nom du jeu - numéro de piste - titre
+                     RegExp("^(\\d+\\s?-\\s?)"+playlistTag+"(\\s+-)",'gi'),// numero de piste - nom du jeu - titre
+                     RegExp("\\["+playlistTag+"\\]$",'gi'),// titre [nom du jeu]
+                     RegExp("\\("+playlistTag+"\\)$",'gi'),// titre (nom du jeu)
+                     RegExp("^"+playlistTag+"(\\s+\|)",'gi'),// nom du jeu | titre
+  ]
+  //console.log('in app - cleaning title:', title);
+  regexFormat.forEach((regex,index) => {
+    if(regex.test(title)){
+      //console.log('in app - regex match found:', regex.toString());
+      if(index == 0){
+        title = title.replace(/^\d+\.\s*/, "")
+                     .replace(new RegExp(`\\s+-\\s+${playlistTag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`), "");
+      }else{
+        title = title.replace(regex, '').trim();
+      }
+    }
+  });
+
+  return title;
+  //https://chatgpt.com/s/t_6a7a64049464819191fc9701bb3ccc23
+  //format de titre:
+  // titre nom du jeu
+  // nom du jeu numero de piste titre
+  // nom du jeu titre
+
 }
 
 function normalize(item) {
@@ -301,14 +356,14 @@ async function getUserTracksTitles(userId){
   userPlaylists.value.forEach(playlist => {
     var playlistTags = playlist.tags.split('\"');
     playlist.tracks.forEach(track => {
-      var re = new RegExp(playlistTags[3], 'gi');
       //console.log('in app - playlist tags:', playlistTags[3]);
       //console.log('in app - track title before normalization:', track.title);
-      track.title = track.title.replace(re, "").replace(/soundtrack|ost/i, "").replace(" - ", "");
+      let titleBeforeClean = track.title;
+      track.title = cleanTitle(track.title, playlistTags[3]? playlistTags[3] : playlistTags[1]);
       tracks.push({
         franchise : playlistTags[1] || '',
         game: playlistTags[3] || '',
-        title: track.title.trim(),
+        title: track.title.trim() /*+ " // " + titleBeforeClean*/,
         id: track.id
       });
     });

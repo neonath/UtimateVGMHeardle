@@ -142,16 +142,21 @@ class SoundCloudAPI {
    */
   async getTrack(trackId) {
     const ctx = new AudioContext();
-    var trackFile = null;
+    var trackM3u = null;
     try {
       const track = await this.request(`/tracks/soundcloud:tracks:${trackId}/streams`);
-      // console.log('in SoundCloudApi - Track details:', track);
-      const trackBlob = await fetch(track.http_mp3_128_url, {
+      console.log('in SoundCloudApi - Track details:', track);
+      const response = await fetch(track.hls_mp3_128_url, {
         headers: {
           'Authorization': `Bearer ${authData.access_token}`
-        }}).then(res => res.blob());
+        }
+      })
+      if(!response.ok) {
+        throw new Error(`SoundCloud API error: ${response.status} ${response.statusText}`);
+      }
       // console.log('in SoundCloudApi - Track file decoded', window.URL.createObjectURL(trackBlob));
-      return window.URL.createObjectURL(trackBlob);
+      console.log('in SoundCloudApi - response:', response);
+      return response.url;
     } catch (error) {
       console.error('Error fetching track:', error);
       throw error;
@@ -201,6 +206,21 @@ class SoundCloudAPI {
     }
   }
 
+  async getWidgetPlayer(trackPermalink) {
+    try{
+      const response = await fetch("https://soundcloud.com/oembed?format=json&url=" + trackPermalink);
+      if (!response.ok) {
+        throw new Error(`SoundCloud API error: ${response.status} ${response.statusText}`);
+      }
+      const widgetPlayer = await response.json();
+      console.log('in SoundCloudApi - Widget player:', widgetPlayer);
+      return widgetPlayer.html;
+    } catch (error) {
+      console.error('Error fetching widget player:', error);
+      throw error;
+    }
+  }
+
   async getPlaylist(playlistId) {
     try {
       const playlist = await this.request(`/playlists/soundcloud:playlists:${playlistId}`);
@@ -223,10 +243,16 @@ class SoundCloudAPI {
   }
 
   async getUserPlaylists(userId) {
+    let playlists = [];
     try {
-      const data = await this.request(`/users/soundcloud:users:${userId}/playlists`, { limit: 200 });
+      const data = await this.request(`/users/soundcloud:users:${userId}/playlists`, {access: 'playable',show_tracks: true, limit: 200 });
       console.log('in SoundCloudApi - User playlists:', data);
-      return data || [];
+      data.forEach(playlist => {
+        if (playlist.tracks && playlist.tracks.length > 0) {
+          playlists.push(playlist);
+        }
+      });
+      return playlists;
     } catch (error) {
       console.error('Error fetching user playlists:', error);
       throw error;
